@@ -1,0 +1,21 @@
+---
+- name: FedRAMP Patch Rollout - RHEL Nodes
+  hosts: rhel_nodes
+  become: true
+  tasks:
+    - name: Ensure latest security updates are installed
+      yum:
+        name: '*'
+        state: latest
+        security: yes
+
+    - name: Reboot if necessary
+      reboot:
+        reboot_timeout: 300
+      when: ansible_facts.packages['kernel'][0]['version'] is version('5.10.0', '<')
+
+    - name: Log patch status
+      lineinfile:
+        path: /var/log/patch_log.txt
+        create: yes
+        line: "Patch completed on {{ inventory_hostname }} at {{ ansible_date_time.iso8601 }}"
